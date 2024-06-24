@@ -3,7 +3,6 @@ import {Chat} from '../../models/chatmodel'
 import asyncHandler from "express-async-handler";
 
 export const accessChat = asyncHandler(async (req:any, res:any) => {
-  console.log(req.user)
 const {userId}=req.body;
 if(!userId){
     res.status(400).send("userId is not there")
