@@ -51,7 +51,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       );
       setMessages(data);
       setLoading(false);
-
+      console.log(selectedChat._id,'messsage')
+console.log(data ," from mee")
       // Removed socket.emit("join chat", selectedChat._id);
     } catch (error) {
       toast({
@@ -66,6 +67,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   };
 
   const sendMessage = async (event) => {
+    // console.log({
+    //   // content: newMessage,
+    //   chatId: selectedChat,
+    // },'hasnain')
     if (event.key === "Enter" && newMessage) {
       // Removed socket.emit("stop typing", selectedChat._id);
       try {
@@ -80,12 +85,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           "http://localhost:5000/api/message",
           {
             content: newMessage,
-            chatId: selectedChat,
+            chatId: selectedChat._id,
           },
           config
         );
         // Removed socket.emit("new message", data);
         setMessages([...messages, data]);
+       console.log(data)    
       } catch (error) {
         toast({
           title: "Error Occured!",

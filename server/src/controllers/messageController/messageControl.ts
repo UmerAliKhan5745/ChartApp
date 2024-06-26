@@ -6,6 +6,7 @@ import { Chat } from "../../models/chatmodel";
 export const allMessages=(asyncHandler(async(req:any,res:any)=>{
 
 try {
+    // console.log(req.params.chatId)
     const message=await Message.find({chat:req.params.chatId})
     .populate('sender','name email pic')
     .populate('chat')
@@ -21,17 +22,17 @@ try {
 
 export const sendMessage=(asyncHandler(async(req:any,res:any)=>{
 
-    const {userId,content}=req.body;
-    if(!userId && !content){
+    const {chatId,content}=req.body;
+    if(!chatId && !content){
         console.log("pls enter  userId and contect ")
         res.status(400)
     }
-
     let newMessage={
         sender:req.user.id,
         content:content,
-        chat:userId
+        chat:chatId
     }
+
 try {
     let message=await Message.create(newMessage)
 

@@ -12,7 +12,7 @@ const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState();
 
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
-
+  // console.log(chats, "chats after setting");
   const toast = useToast();
 
   const fetchChats = async () => {
@@ -37,7 +37,6 @@ const MyChats = ({ fetchAgain }) => {
       const data = await response.json();
       console.log(data, "fetched data"); // Check the fetched data structure
       setChats(data);
-      console.log(chats, "chats after setting"); // Check the chats after setting
       
     } catch (error) {
       console.error("Fetch Chats Error:", error); // Log the error

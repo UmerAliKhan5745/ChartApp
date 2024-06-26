@@ -10,7 +10,7 @@ const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState([]);
 
   const history = useHistory();
-
+// console.log(chats,"chats from contxt")
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     setUser(userInfo);
