@@ -9,17 +9,18 @@ import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ProfileModal from "./miscellaneous/ProfileModal";
 import ScrollableChat from "./ScrollableChat";
-import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
+import io from "socket.io-client";
+const URL='http://localhost:5000'
 
+ let  socket  ,selectedChatCompare
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const [typing, setTyping] = useState(false);
-  const [istyping, setIsTyping] = useState(false);
+  const [SocketConnected,setSocketConnected]=useState(false)
   const toast = useToast();
 
   const defaultOptions = {
@@ -31,48 +32,36 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     },
   };
 
-  const { selectedChat, setSelectedChat, user, notification, setNotification } = ChatState();
-
+  const { selectedChat, setSelectedChat, user } = ChatState();
   const fetchMessages = async () => {
     if (!selectedChat) return;
-
     try {
       const config = {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
       };
-
       setLoading(true);
-
       const { data } = await axios.get(
         `http://localhost:5000/api/message/${selectedChat._id}`,
         config
       );
       setMessages(data);
       setLoading(false);
-      console.log(selectedChat._id,'messsage')
-console.log(data ," from mee")
-      // Removed socket.emit("join chat", selectedChat._id);
+      socket.emit('joinChat',selectedChat._id)
     } catch (error) {
       toast({
         title: "Error Occured!",
         description: "Failed to Load the Messages",
         status: "error",
         duration: 5000,
-        isClosable: true,
+        isClosable: true, 
         position: "bottom",
       });
     }
   };
-
   const sendMessage = async (event) => {
-    // console.log({
-    //   // content: newMessage,
-    //   chatId: selectedChat,
-    // },'hasnain')
     if (event.key === "Enter" && newMessage) {
-      // Removed socket.emit("stop typing", selectedChat._id);
       try {
         const config = {
           headers: {
@@ -89,9 +78,9 @@ console.log(data ," from mee")
           },
           config
         );
-        // Removed socket.emit("new message", data);
+        socket.emit("new message", data);
+
         setMessages([...messages, data]);
-       console.log(data)    
       } catch (error) {
         toast({
           title: "Error Occured!",
@@ -105,32 +94,31 @@ console.log(data ," from mee")
     }
   };
 
+  const handleInputChange = (event) => {
+    setNewMessage(event.target.value);
+  };
+
   useEffect(() => {
     fetchMessages();
 
-    // Removed selectedChatCompare = selectedChat;
-    // eslint-disable-next-line
+    selectedChatCompare=selectedChat;
+
   }, [selectedChat]);
 
-  // Removed entire useEffect that handled socket "message received"
+  useEffect(() => {
+    
 
-  const typingHandler = (e) => {
-    setNewMessage(e.target.value);
+  });
 
-    // Removed socket typing logic
+   useEffect(()=>{
+    socket  = io(URL);
+    socket.emit('setup',user)
+    socket.on("connected",setSocketConnected(true))
+    socket.on("message received", (newMessageReceived) => {
+      setMessages([...messages, newMessageReceived]);
+    });
 
-    let lastTypingTime = new Date().getTime();
-    var timerLength = 3000;
-    setTimeout(() => {
-      var timeNow = new Date().getTime();
-      var timeDiff = timeNow - lastTypingTime;
-      if (timeDiff >= timerLength && typing) {
-        // Removed socket.emit("stop typing", selectedChat._id);
-        setTyping(false);
-      }
-    }, timerLength);
-  };
-
+   },[])
   return (
     <>
       {selectedChat ? (
@@ -198,24 +186,12 @@ console.log(data ," from mee")
               isRequired
               mt={3}
             >
-              {istyping ? (
-                <div>
-                  <Lottie
-                    options={defaultOptions}
-                    // height={50}
-                    width={70}
-                    style={{ marginBottom: 15, marginLeft: 0 }}
-                  />
-                </div>
-              ) : (
-                <></>
-              )}
               <Input
                 variant="filled"
                 bg="#E0E0E0"
                 placeholder="Enter a message.."
                 value={newMessage}
-                onChange={typingHandler}
+                onChange={handleInputChange}
               />
             </FormControl>
           </Box>
