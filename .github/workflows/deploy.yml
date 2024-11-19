@@ -48,24 +48,46 @@ jobs:
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
       # Build and push Docker image
-      - name: Build and push Docker  image
+      - name: Build and push Docker image
         run: |
-          docker build -t  umerali5745/mydockerhubuser:latest .
-          docker push  umerali5745/mydockerhubuser:latest
+          docker build -t umerali5745/mydockerhubuser:latest .
+          docker push umerali5745/mydockerhubuser:latest
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      # Connect to AWS EC2 using SSH and deploy
+      # Check if the AWS private key is being passed correctly
+      - name: Check if AWS_PRIVATE_KEY exists
+        run: |
+          if [ -z "${{ secrets.AWS_PRIVATE_KEY }}" ]; then
+            echo "AWS_PRIVATE_KEY is not set!"
+            exit 1
+          else
+            echo "AWS_PRIVATE_KEY is set."
+          fi
+
+      # Decode SSH Private Key
+      - name: Decode SSH Private Key
+        run: |
+          echo "$AWS_PRIVATE_KEY" | base64 --decode > private_key.pem
+          chmod 600 private_key.pem
+          if [ -f "private_key.pem" ]; then
+            echo "Private key successfully decoded and saved as private_key.pem"
+          else
+            echo "Private key decoding failed!"
+            exit 1
+          fi
+
+      # Deploy to AWS EC2 using SSH
       - name: Deploy to AWS EC2
-        uses: appleboy/ssh-action@v0.5.0
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.AWS_HOST }}
-          username: ${{ secrets.AWS_USER }}
-          key: ${{ secrets.AWS_PRIVATE_KEY }}
-          port: 22
+          host: ${{ secrets.AWS_HOST }} # EC2 Public IP or DNS
+          username: ${{ secrets.AWS_USER }} # EC2 SSH Username
+          key: ./private_key.pem # Use the decoded private key
+          port: 22 # Default SSH port
           script: |
             docker pull umerali5745/mydockerhubuser:latest
             docker stop myapp || true
