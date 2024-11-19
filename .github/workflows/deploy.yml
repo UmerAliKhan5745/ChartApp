@@ -48,7 +48,7 @@ jobs:
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
       # Build and push Docker image
-      - name: Build and push Docker image
+      - name: Build and push Docker  image
         run: |
           docker build -t mydockerhubuser/myapp:latest .
           docker push mydockerhubuser/myapp:latest
