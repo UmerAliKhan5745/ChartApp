@@ -68,11 +68,7 @@ jobs:
             echo "AWS_PRIVATE_KEY is set."
           fi
 
-<<<<<<< HEAD
       # Decode SSH Private Key
-=======
-      # Decode and verify SSH Private Key
->>>>>>> 650ad74732f30e3bc426a5e467e59326541a44a2
       - name: Decode SSH Private Key
         run: |
           echo "$AWS_PRIVATE_KEY" | base64 --decode > private_key.pem
@@ -88,17 +84,10 @@ jobs:
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
-<<<<<<< HEAD
           host: ${{ secrets.AWS_HOST }} # EC2 Public IP or DNS
           username: ${{ secrets.AWS_USER }} # EC2 SSH Username
           key: ./private_key.pem # Use the decoded private key
           port: 22 # Default SSH port
-=======
-          host: ${{ secrets.AWS_HOST }}  # EC2 Public IP or DNS
-          username: ${{ secrets.AWS_USER }}  # EC2 SSH Username
-          key: ${{ secrets.AWS_PRIVATE_KEY }}  # Use the decoded private key
-          port: 22  # Default SSH port
->>>>>>> 650ad74732f30e3bc426a5e467e59326541a44a2
           script: |
             docker pull umerali5745/mydockerhubuser:latest
             docker stop myapp || true
