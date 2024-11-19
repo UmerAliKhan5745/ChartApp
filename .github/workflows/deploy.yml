@@ -60,7 +60,13 @@ jobs:
           key: ${{ secrets.AWS_PRIVATE_KEY }}
           port: 22
           script: |
-            docker pull umerali5745/mydockerhubuser:latest
-            docker stop mydockerhubuser || true
-            docker rm myapp || true
-            docker run -d -p 5000:5000 --name mydockerhubuser umerali5745/mydockerhubuser:latest
+            if ! [ -x "$(command -v docker)" ]; then
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+            sudo systemctl start docker
+            sudo systemctl enable docker
+             fi
+             docker pull umerali5745/mydockerhubuser:latest
+             docker stop mydockerhubuser || true
+               docker rm myapp || true
+               docker run -d -p 5000:5000 --name mydockerhubuser umerali5745/mydockerhubuser:latest
