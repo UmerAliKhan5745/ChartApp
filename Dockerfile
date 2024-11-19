@@ -1,31 +1,29 @@
-# Build the frontend
+# Step 1: Build the frontend
 FROM node:20 as frontend-build
 WORKDIR /usr/src/frontend
 
-# Copy frontend dependencies and install
+# Install frontend dependencies and build
 COPY frontend/package*.json ./
 RUN npm install --legacy-peer-deps
-
-# Copy the rest of the frontend code and build it
 COPY frontend/ ./
 RUN npm run build
 
-# Build the backend
+# Step 2: Set up the backend
 FROM node:20 as backend-build
 WORKDIR /usr/src/backend
 
-# Copy backend dependencies and install
+# Install backend dependencies
 COPY backend/package*.json ./
 RUN npm install --legacy-peer-deps
 
-# Copy the rest of the backend code
+# Copy backend code
 COPY backend/ ./
 
-# Copy the frontend build to the backend (to serve static files)
-COPY --from=frontend-build /usr/src/frontend/build ./public
+# Copy the frontend build to the appropriate directory
+COPY --from=frontend-build /usr/src/frontend/build ./frontend/build
 
-# Expose the backend port
+# Expose backend port
 EXPOSE 5000
 
 # Start the backend in production mode
-CMD ["npm", "start"]
+CMD ["bash", "-c", "NODE_ENV=production npm start"]
