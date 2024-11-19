@@ -33,6 +33,12 @@ jobs:
         run: |
           npm install --legacy-peer-deps
 
+      # Print Docker credentials (for debugging purposes, remove after verification)
+      - name: Print Docker credentials
+        run: |
+          echo "DOCKER_USERNAME: $DOCKER_USERNAME"
+          echo "DOCKER_PASSWORD: $DOCKER_PASSWORD"
+
       # Log in to Docker Hub
       - name: Log in to DockerHub
         env:
