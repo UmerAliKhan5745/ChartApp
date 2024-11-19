@@ -46,27 +46,34 @@ jobs:
         run: |
           docker build -t umerali5745/mydockerhubuser:latest .
           docker push umerali5745/mydockerhubuser:latest
+          deploy:
+            needs: build
+            runs-on: ubuntu-latest
 
-  deploy:
-    needs: build # Ensure build step is successful before deploying
-    runs-on: ubuntu-latest
+            steps:
+              - name: Checkout code
+                uses: actions/checkout@v3
 
-    steps:
-      # Connect to AWS EC2 using SSH and deploy the Docker container
-      - name: Deploy to AWS EC2
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.AWS_HOST }} # EC2 Public IP or DNS
-          username: ${{ secrets.AWS_USER }} # EC2 SSH Username (e.g., ec2-user or ubuntu)
-          key: ${{ secrets.AWS_PRIVATE_KEY }} # EC2 Private Key (as GitHub secret)
-          port: 22 # Default SSH port
-          script: |
-            # Pull the latest image from DockerHub
-            docker pull umerali5745/mydockerhubuser:latest
+              - name: Decode SSH Private Key
+                run: |
+                  echo "$AWS_PRIVATE_KEY" | base64 --decode > private_key.pem
+                  chmod 600 private_key.pem
 
-            # Stop and remove any existing container with the same name
-            docker stop mydockerhubuser || true
-            docker rm mydockerhubuser || true
+              # Connect to AWS EC2 using SSH and deploy the Docker container
+              - name: Deploy to AWS EC2
+                uses: appleboy/ssh-action@v1.2.0
+                with:
+                  host: ${{ secrets.AWS_HOST }}  # EC2 Public IP or DNS
+                  username: ${{ secrets.AWS_USER }}  # EC2 SSH Username
+                  key: ${{ secrets.AWS_PRIVATE_KEY }}  # Not used directly after decoding
+                  port: 22  # Default SSH port
+                  script: |
+                    # Pull the latest image from DockerHub
+                    docker pull umerali5745/mydockerhubuser:latest
 
-            # Run the container in detached mode, mapping port 5000
-            docker run -d -p 5000:5000 --name mydockerhubuser umerali5745/mydockerhubuser:latest
+                    # Stop and remove any existing container with the same name
+                    docker stop mydockerhubuser || true
+                    docker rm mydockerhubuser || true
+
+                    # Run the container in detached mode, mapping port 5000
+                    docker run -d -p 5000:5000 --name mydockerhubuser umerali5745/mydockerhubuser:latest
