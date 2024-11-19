@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main # Trigger the workflow on push to the main branch
-  pull_request:
 
 jobs:
   build:
@@ -34,13 +33,12 @@ jobs:
         run: |
           npm install --legacy-peer-deps
 
-      # Docker build and push to Docker Hub
+      # Log in to Docker Hub using credentials from GitHub Secrets
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
+      # Build and push Docker image to Docker Hub
       - name: Build and push Docker image
         run: |
           docker build -t mydockerhubuser/myapp:latest .
@@ -64,19 +62,3 @@ jobs:
             docker stop myapp || true
             docker rm myapp || true
             docker run -d -p 5000:5000 --name myapp mydockerhubuser/myapp:latest
-
-      # Set environment variables for deployment
-      - name: Set environment variables on the server
-        run: |
-          echo "MONGODB_URL=${{ secrets.MONGODB_URL }}" >> .env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
-          echo "CLIENT_ORIGIN=${{ secrets.CLIENT_ORIGIN }}" >> .env
-          echo "PORT=${{ secrets.PORT }}" >> .env
-
-      # Restart the application after setting env variables
-      - name: Restart Application
-        run: |
-          docker stop myapp || true
-          docker rm myapp || true
-          docker run -d -p 5000:5000 --name myapp --env-file .env mydockerhubuser/myapp:latest
