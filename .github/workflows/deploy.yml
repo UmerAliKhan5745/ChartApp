@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for MERN Appp
+name: CI/CD Pipeline for MERN App
 
 on:
   push:
@@ -27,17 +27,11 @@ jobs:
           npm install --legacy-peer-deps
           npm run build
 
-      # Install dependencies and build the backend
+      # Install dependencies and prepare the backend
       - name: Install and prepare backend
         working-directory: backend
         run: |
           npm install --legacy-peer-deps
-
-      # Print Docker credentials (for debugging purposes, remove after verification)
-      - name: Print Docker credentials
-        run: |
-          echo "DOCKER_USERNAME: $DOCKER_USERNAME"
-          echo "DOCKER_PASSWORD: $DOCKER_PASSWORD"
 
       # Log in to Docker Hub
       - name: Log in to DockerHub
@@ -50,46 +44,41 @@ jobs:
       # Build and push Docker image
       - name: Build and push Docker image
         run: |
-          docker build -t umerali5745/mydockerhubuser:latest .
-          docker push umerali5745/mydockerhubuser:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/mern-app:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/mern-app:latest
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      # Check if the AWS private key is being passed correctly
-      - name: Check if AWS_PRIVATE_KEY exists
-        run: |
-          if [ -z "${{ secrets.AWS_PRIVATE_KEY }}" ]; then
-            echo "AWS_PRIVATE_KEY is not set!"
-            exit 1
-          else
-            echo "AWS_PRIVATE_KEY is set."
-          fi
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      # Decode SSH Private Key
+      # Decode and save the AWS private key
       - name: Decode SSH Private Key
         run: |
-          echo "$AWS_PRIVATE_KEY" | base64 --decode > private_key.pem
+          echo "$AWS_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          if [ -f "private_key.pem" ]; then
-            echo "Private key successfully decoded and saved as private_key.pem"
-          else
-            echo "Private key decoding failed!"
-            exit 1
-          fi
+        env:
+          AWS_PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
+
+      # Add the EC2 host to known hosts
+      - name: Add EC2 to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.AWS_HOST }} >> ~/.ssh/known_hosts
 
       # Deploy to AWS EC2 using SSH
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.AWS_HOST }} # EC2 Public IP or DNS
-          username: ${{ secrets.AWS_USER }} # EC2 SSH Username
-          key: ./private_key.pem # Use the decoded private key
+          username: ${{ secrets.AWS_USER }} # EC2 SSH Username (e.g., ubuntu)
+          key: private_key.pem # Use the decoded private key
           port: 22 # Default SSH port
           script: |
-            docker pull umerali5745/mydockerhubuser:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/mern-app:latest
             docker stop myapp || true
             docker rm myapp || true
-            docker run -d -p 5000:5000 --name myapp umerali5745/mydockerhubuser:latest
+            docker run -d -p 5000:5000 --name myapp ${{ secrets.DOCKER_USERNAME }}/mern-app:latest
