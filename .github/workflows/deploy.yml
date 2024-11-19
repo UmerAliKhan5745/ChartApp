@@ -70,5 +70,5 @@ jobs:
               newgrp docker || true
              docker pull umerali5745/mydockerhubuser:latest
              docker stop mydockerhubuser || true
-               docker rm myapp || true
+               docker rm mydockerhubuser || true
                docker run -d -p 5000:5000 --name mydockerhubuser umerali5745/mydockerhubuser:latest
