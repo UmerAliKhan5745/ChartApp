@@ -24,7 +24,6 @@ app.use("/api/message", messageRoutes);
 // --------------------------deployment------------------------------
 const __dirname1 = path.resolve();
 if (process.env.NODE_ENV === "production") {
-  console.log("ume");
   app.use(express.static(path.join(__dirname1, "/frontend/build")));
   // app.use(express.static(path.join(__dirname1, "public")));
 
@@ -32,11 +31,12 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.resolve(__dirname1, "frontend", "build", "index.html"))
   );
 } else {
-  app.get("/", (req, res) => {
-    console.log("musa");
+  app.use(express.static(path.join(__dirname1, "/frontend/build")));
+  // app.use(express.static(path.join(__dirname1, "public")));
 
-    res.send("API is running..");
-  });
+  app.get("*", (req, res) =>
+    res.sendFile(path.resolve(__dirname1, "frontend", "build", "index.html"))
+  );
 }
 
 // --------------------------deployment------------------------------
