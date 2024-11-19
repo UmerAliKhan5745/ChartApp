@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Node.js
+      # Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -27,19 +27,13 @@ jobs:
           npm install --legacy-peer-deps
           npm run build
 
-      # Install dependencies and build the backend
+      # Install dependencies for the backend
       - name: Install and prepare backend
         working-directory: backend
         run: |
           npm install --legacy-peer-deps
 
-      # Print Docker credentials (for debugging purposes, remove after verification)
-      - name: Print Docker credentials
-        run: |
-          echo "DOCKER_USERNAME: $DOCKER_USERNAME"
-          echo "DOCKER_PASSWORD: $DOCKER_PASSWORD"
-
-      # Log in to Docker Hub
+      # Log in to DockerHub
       - name: Log in to DockerHub
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -48,26 +42,31 @@ jobs:
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
       # Build and push Docker image
-      - name: Build and push Docker  image
+      - name: Build and push Docker image
         run: |
-          docker build -t  umerali5745/mydockerhubuser:latest .
-          docker push  umerali5745/mydockerhubuser:latest
+          docker build -t umerali5745/mydockerhubuser:latest .
+          docker push umerali5745/mydockerhubuser:latest
 
   deploy:
-    needs: build
+    needs: build # Ensure build step is successful before deploying
     runs-on: ubuntu-latest
 
     steps:
-      # Connect to AWS EC2 using SSH and deploy
+      # Connect to AWS EC2 using SSH and deploy the Docker container
       - name: Deploy to AWS EC2
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.AWS_HOST }}
-          username: ${{ secrets.AWS_USER }}
-          key: ${{ secrets.AWS_PRIVATE_KEY }}
-          port: 22
+          host: ${{ secrets.AWS_HOST }} # EC2 Public IP or DNS
+          username: ${{ secrets.AWS_USER }} # EC2 SSH Username (e.g., ec2-user or ubuntu)
+          key: ${{ secrets.AWS_PRIVATE_KEY }} # EC2 Private Key (as GitHub secret)
+          port: 22 # Default SSH port
           script: |
+            # Pull the latest image from DockerHub
             docker pull umerali5745/mydockerhubuser:latest
+
+            # Stop and remove any existing container with the same name
             docker stop mydockerhubuser || true
             docker rm mydockerhubuser || true
+
+            # Run the container in detached mode, mapping port 5000
             docker run -d -p 5000:5000 --name mydockerhubuser umerali5745/mydockerhubuser:latest
