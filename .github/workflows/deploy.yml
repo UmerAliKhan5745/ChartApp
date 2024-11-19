@@ -64,3 +64,19 @@ jobs:
             docker stop myapp || true
             docker rm myapp || true
             docker run -d -p 5000:5000 --name myapp mydockerhubuser/myapp:latest
+
+      # Set environment variables for deployment
+      - name: Set environment variables on the server
+        run: |
+          echo "MONGODB_URL=${{ secrets.MONGODB_URL }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
+          echo "CLIENT_ORIGIN=${{ secrets.CLIENT_ORIGIN }}" >> .env
+          echo "PORT=${{ secrets.PORT }}" >> .env
+
+      # Restart the application after setting env variables
+      - name: Restart Application
+        run: |
+          docker stop myapp || true
+          docker rm myapp || true
+          docker run -d -p 5000:5000 --name myapp --env-file .env mydockerhubuser/myapp:latest
