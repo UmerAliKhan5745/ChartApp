@@ -66,6 +66,8 @@ jobs:
             sudo systemctl start docker
             sudo systemctl enable docker
              fi
+              sudo usermod -aG docker $USER || true
+              newgrp docker || true
              docker pull umerali5745/mydockerhubuser:latest
              docker stop mydockerhubuser || true
                docker rm myapp || true
