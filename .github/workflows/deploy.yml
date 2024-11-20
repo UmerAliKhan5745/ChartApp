@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for MERN App
+name: CI/CD Pipeline for MERN Appp
 
 on:
   push:
