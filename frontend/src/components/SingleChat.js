@@ -15,7 +15,7 @@ import animationData from "../animations/typing.json";
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
-const ENDPOINT = "http:/13.60.251.88/"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
+const ENDPOINT = "http://13.60.251.88:5000"; // Match the backend port
 var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
