@@ -15,7 +15,7 @@ import animationData from "../animations/typing.json";
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
-const ENDPOINT = "http://13.60.251.88:5000"; // Match the backend server's public IP
+const ENDPOINT = "http://13.60.251.88"; // Match the backend server's public IP
 
 var socket, selectedChatCompare;
 
